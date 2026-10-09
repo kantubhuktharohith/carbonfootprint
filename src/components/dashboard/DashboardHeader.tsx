@@ -144,38 +144,68 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </div>
       </div>
 
-      {/* Top Recommended Action Preview Card */}
+      {/* Top Recommended Action Preview Card & Custom Advisor Input */}
       {topRecommendation && (
-        <div className="bg-gradient-to-r from-emerald-900 to-[#166534] text-white rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white/10 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
-                  Top Recommended Action
-                </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200">
-                  Save ~{topRecommendation.estimated_savings.toLocaleString()} kg CO2e
-                </span>
+        <div className="bg-gradient-to-r from-emerald-900 to-[#166534] text-white rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-white/10 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white mt-0.5">
-                {topRecommendation.title}
-              </h3>
-              <p className="text-xs text-emerald-100/90 mt-1 max-w-2xl line-clamp-2">
-                {topRecommendation.explanation}
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
+                    Top Recommended Action
+                  </span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200">
+                    Save ~{topRecommendation.estimated_savings.toLocaleString()} kg CO2e
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white mt-0.5">
+                  {topRecommendation.title}
+                </h3>
+                <p className="text-xs text-emerald-100/90 mt-1 max-w-2xl line-clamp-2">
+                  {topRecommendation.explanation}
+                </p>
+              </div>
             </div>
+
+            <Link
+              to="/recommendations"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#166534] text-xs font-bold shadow-xs transition-all shrink-0 self-end md:self-center whitespace-nowrap"
+            >
+              <span>Explore Advisor</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <Link
-            to="/recommendations"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#166534] text-xs font-bold shadow-xs transition-all shrink-0 self-end md:self-center"
-          >
-            <span>View All Recommendations</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          {/* Quick User-Input Advisor Launcher */}
+          <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <span className="text-emerald-200 text-[11px] font-semibold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+              Want suggestions for your own goals? Use the Interactive Advisor:
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/recommendations"
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium border border-white/15 transition-all"
+              >
+                + Carpool Strategy
+              </Link>
+              <Link
+                to="/recommendations"
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium border border-white/15 transition-all"
+              >
+                + Plant-Rich Catering
+              </Link>
+              <Link
+                to="/recommendations"
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium border border-white/15 transition-all"
+              >
+                + Rooftop Solar
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </div>

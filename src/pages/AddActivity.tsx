@@ -10,11 +10,13 @@ import {
   Calculator,
   ArrowLeft,
   Info,
+  Lightbulb,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ActivityCategory } from '../types';
 import { EMISSION_FACTORS } from '../data/emissionFactors';
 import { calculateActivityEmissions } from '../lib/calculations';
+import { generateInstantActivitySuggestion } from '../lib/recommendations';
 
 export const AddActivity: React.FC = () => {
   const navigate = useNavigate();
@@ -144,6 +146,12 @@ export const AddActivity: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  const instantSuggestion = useMemo(() => {
+    const numQty = parseFloat(quantity);
+    if (isNaN(numQty) || numQty <= 0 || !currentFactor) return null;
+    return generateInstantActivitySuggestion(category, currentFactor.activity_type, numQty, currentFactor.unit);
+  }, [category, currentFactor, quantity]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -456,6 +464,33 @@ export const AddActivity: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Step 3.5: Instant User-Input-Based Reduction Suggestion */}
+          {instantSuggestion && (
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-green-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3.5 text-xs animate-in fade-in duration-200">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-[#166534] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                <Lightbulb className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                  <span className="font-bold text-emerald-950 uppercase tracking-wider text-[10px]">
+                    Smart Reduction Opportunity for this Entry
+                  </span>
+                  <span className="font-extrabold text-[#166534] bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[11px]">
+                    Potential Savings: ~{instantSuggestion.potentialSavingsKg.toLocaleString()} kg CO2e
+                  </span>
+                </div>
+                <p className="text-emerald-900 font-medium leading-relaxed">
+                  {instantSuggestion.tip}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-emerald-800">
+                    Recommended Action: {instantSuggestion.actionName}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">

@@ -99,7 +99,18 @@ export interface Recommendation {
   assumptions: string;
   next_steps: string[];
   status: 'new' | 'in_progress' | 'completed' | 'dismissed';
+  adoption_percentage?: number;
+  user_customized?: boolean;
   created_at: string;
+}
+
+export interface UserRecommendationPreferences {
+  category?: ActivityCategory | 'all';
+  targetReductionPct?: number; // e.g. 10 to 60%
+  budgetTier?: 'all' | 'zero' | 'low' | 'medium' | 'high';
+  difficulty?: 'all' | 'easy' | 'medium' | 'hard';
+  timeframe?: 'all' | 'immediate' | 'short-term' | 'medium-term';
+  customGoalText?: string;
 }
 
 export interface SimulationScenario {
