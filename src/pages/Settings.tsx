@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Settings as SettingsIcon,
   User,
   Building2,
   CalendarDays,
-  Target,
-  RotateCcw,
   CheckCircle2,
   Database,
-  ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { WorkspaceType } from '../types';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 export const Settings: React.FC = () => {
@@ -19,40 +14,41 @@ export const Settings: React.FC = () => {
     workspaceType,
     setWorkspaceType,
     profile,
+    updateProfile,
     organization,
     event,
     setParticipantCount,
-    resetToDemoData,
+    loadSampleData,
   } = useApp();
 
-  const [fullName, setFullName] = useState(profile?.full_name || 'Dr. Aarav Sharma');
-  const [orgName, setOrgName] = useState(
-    organization?.name || 'Apex Institute of Technology & Green Innovation'
-  );
-  const [eventName, setEventName] = useState(
-    event?.name || 'EcoHack & Sustainability Conclave 2026'
-  );
+  const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [orgName, setOrgName] = useState(organization?.name || '');
+  const [eventName, setEventName] = useState(event?.name || '');
   const [participants, setParticipants] = useState(
-    (event?.actual_participants || organization?.participant_count || 342).toString()
+    event?.actual_participants?.toString() || organization?.participant_count?.toString() || ''
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    const count = parseInt(participants, 10);
-    if (!isNaN(count) && count > 0) {
-      setParticipantCount(count);
-    }
-    setToastMessage('Workspace settings updated successfully!');
+  const handleLoadSampleData = () => {
+    loadSampleData();
+    setToastMessage('One month of sample data was added to local storage.');
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleReset = () => {
-    if (window.confirm('Reset all demo activities to the initial hackathon baseline?')) {
-      resetToDemoData();
-      setToastMessage('Demo dataset reset to initial state.');
-      setTimeout(() => setToastMessage(null), 3000);
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const count = parseInt(participants, 10);
+      if (!isNaN(count) && count > 0) {
+        setParticipantCount(count);
+      }
+      await updateProfile({ full_name: fullName, account_type: workspaceType });
+      setToastMessage('Workspace settings updated successfully!');
+    } catch (error) {
+      console.error('Failed to save workspace settings:', error);
+      setToastMessage('Unable to save workspace settings. Please try again.');
     }
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
@@ -217,14 +213,12 @@ export const Settings: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-bold text-xs text-gray-900">
-                  {isSupabaseConfigured
-                    ? 'Connected to Supabase PostgreSQL'
-                    : 'Interactive Local Demo Mode (Active)'}
+                  {isSupabaseConfigured ? 'Connected to Supabase PostgreSQL' : 'Local storage persistence'}
                 </h4>
                 <p className="text-[11px] text-gray-500">
                   {isSupabaseConfigured
                     ? 'Real-time Row Level Security cloud persistence is enabled.'
-                    : 'Running seamlessly in offline localStorage demo mode. No credentials required.'}
+                    : 'Data is stored in this browser until Supabase is configured.'}
                 </p>
               </div>
             </div>
@@ -236,21 +230,12 @@ export const Settings: React.FC = () => {
                   : 'bg-emerald-100 text-[#166534]'
               }`}
             >
-              {isSupabaseConfigured ? 'Cloud Live' : 'Demo Mode'}
+              {isSupabaseConfigured ? 'Cloud Live' : 'Local Storage'}
             </span>
           </div>
 
           {/* Buttons */}
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Demo Dataset</span>
-            </button>
-
+          <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
             <button
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all"
@@ -259,6 +244,21 @@ export const Settings: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {!isSupabaseConfigured && (
+          <div className="border-t border-gray-100 pt-5">
+            <p className="text-xs text-gray-500 mb-3">
+              The workspace is empty by default. Add 30 days of local-only sample records for testing.
+            </p>
+            <button
+              type="button"
+              onClick={handleLoadSampleData}
+              className="px-4 py-2.5 rounded-xl border border-emerald-200 text-emerald-800 hover:bg-emerald-50 text-xs font-bold transition-colors"
+            >
+              Load Sample Data
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

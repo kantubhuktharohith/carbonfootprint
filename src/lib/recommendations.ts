@@ -36,7 +36,7 @@ export function generateRecommendations(
   const gridActs = electricityActs.filter((a) => a.activity_type.includes('grid'));
   const totalGridKWh = gridActs.reduce((sum, a) => sum + a.quantity, 0);
 
-  if (totalGridKWh > 100) {
+  if (totalGridKWh > 0) {
     // Rooftop solar / green power transition
     const solarShiftPct = Math.min(0.9, Math.max(0.1, reductionFactor));
     const potentialKWhShift = Math.round(totalGridKWh * solarShiftPct);
@@ -106,7 +106,7 @@ export function generateRecommendations(
   const flightKm = flightActs.reduce((sum, a) => sum + a.quantity, 0);
   const soloCarKm = soloCarActs.reduce((sum, a) => sum + a.quantity, 0);
 
-  if (flightKm > 200) {
+  if (flightKm > 0) {
     const flightShiftPct = Math.min(0.85, Math.max(0.2, reductionFactor));
     const shiftedKm = Math.round(flightKm * flightShiftPct);
     const flightSavings = Math.round(shiftedKm * (0.245 - 0.035) * 10) / 10;
@@ -135,7 +135,7 @@ export function generateRecommendations(
     });
   }
 
-  if (soloCarKm > 200) {
+  if (soloCarKm > 0) {
     const carpoolShiftPct = Math.min(0.85, Math.max(0.25, reductionFactor));
     const shiftedCarKm = Math.round(soloCarKm * carpoolShiftPct);
     const carpoolSavings = Math.round(shiftedCarKm * (0.170 - 0.056) * 10) / 10;
@@ -174,7 +174,7 @@ export function generateRecommendations(
   const redMeatMeals = redMeatActs.reduce((sum, a) => sum + a.quantity, 0);
   const mixedMeals = mixedActs.reduce((sum, a) => sum + a.quantity, 0);
 
-  if (redMeatMeals > 20 || mixedMeals > 40) {
+  if (redMeatMeals > 0 || mixedMeals > 0) {
     const foodShiftPct = Math.min(0.9, Math.max(0.3, reductionFactor));
     const targetRedMeatShift = Math.round(redMeatMeals * foodShiftPct);
     const targetMixedShift = Math.round(mixedMeals * (foodShiftPct * 0.6));
@@ -213,7 +213,7 @@ export function generateRecommendations(
   const landfillActs = wasteActs.filter((a) => a.metadata?.disposal_method === 'landfill' || a.activity_type.includes('landfill'));
   const landfillKg = landfillActs.reduce((sum, a) => sum + a.quantity, 0);
 
-  if (landfillKg > 30) {
+  if (landfillKg > 0) {
     const divertPct = Math.min(0.9, Math.max(0.35, reductionFactor));
     const divertKg = Math.round(landfillKg * divertPct);
     const wasteSavings = Math.round(divertKg * (0.58 - 0.05) * 10) / 10;
@@ -237,6 +237,91 @@ export function generateRecommendations(
         'Replace all single-use plastic water bottles with refillable water filtration coolers.',
         'Deploy color-coded 3-bin collection stations across venue dining and presentation halls.',
         'Partner with campus agriculture/horticulture department for aerobic food scrap composting.',
+      ],
+      status: 'new',
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Ensure every category with recorded activity receives at least one
+  // actionable recommendation, including low-volume and lower-carbon activity.
+  const coveredCategories = new Set(recommendations.map((recommendation) => recommendation.category));
+  const categoryCoverage: Array<{
+    category: ActivityCategory;
+    title: string;
+    explanation: string;
+    suggested_change: string;
+    savingRate: number;
+    difficulty: Recommendation['difficulty'];
+    estimated_cost: Recommendation['estimated_cost'];
+    timeframe: Recommendation['timeframe'];
+  }> = [
+    {
+      category: 'electricity',
+      title: 'Reduce Electricity Demand with Monitoring and Efficiency Controls',
+      explanation: 'Track high-consumption equipment and apply shutdown schedules, efficient setpoints, and renewable sourcing where practical.',
+      suggested_change: 'Create monthly energy limits and review consumption by meter, building, or equipment group.',
+      savingRate: 0.15,
+      difficulty: 'easy',
+      estimated_cost: 'low',
+      timeframe: 'short-term',
+    },
+    {
+      category: 'transportation',
+      title: 'Prioritize Lower-Emission Travel Options',
+      explanation: 'Use the lowest-emission mode available for each journey and reduce unnecessary passenger-kilometres.',
+      suggested_change: 'Prefer walking, cycling, rail, public transit, EVs, or shared travel over solo combustion-vehicle trips.',
+      savingRate: 0.2,
+      difficulty: 'easy',
+      estimated_cost: 'zero',
+      timeframe: 'immediate',
+    },
+    {
+      category: 'food',
+      title: 'Increase Plant-Based Meals and Prevent Over-Ordering',
+      explanation: 'Plant-forward meals generally have lower emissions, while accurate headcounts help prevent avoidable food production and waste.',
+      suggested_change: 'Make vegetarian or vegan meals the default and confirm meal quantities before ordering.',
+      savingRate: 0.2,
+      difficulty: 'easy',
+      estimated_cost: 'zero',
+      timeframe: 'immediate',
+    },
+    {
+      category: 'waste',
+      title: 'Improve Waste Separation and Material Recovery',
+      explanation: 'Separating recyclable, compostable, and residual waste improves recovery and reduces landfill dependence.',
+      suggested_change: 'Install clearly labelled collection points and record disposal method for each waste stream.',
+      savingRate: 0.2,
+      difficulty: 'easy',
+      estimated_cost: 'low',
+      timeframe: 'short-term',
+    },
+  ];
+
+  for (const coverage of categoryCoverage) {
+    const categoryActivities = activities.filter((activity) => activity.category === coverage.category);
+    if (categoryActivities.length === 0 || coveredCategories.has(coverage.category)) continue;
+
+    const categoryTotal = categoryActivities.reduce(
+      (sum, activity) => sum + (activity.estimated_emissions || 0),
+      0
+    );
+    recommendations.push({
+      id: `rec-${coverage.category}-coverage`,
+      title: coverage.title,
+      explanation: coverage.explanation,
+      category: coverage.category,
+      baseline_activity: `${categoryActivities.length} recorded ${coverage.category} activit${categoryActivities.length === 1 ? 'y' : 'ies'} (${Math.round(categoryTotal * 10) / 10} kg CO2e)`,
+      suggested_change: coverage.suggested_change,
+      estimated_savings: Math.round(categoryTotal * coverage.savingRate * 10) / 10,
+      difficulty: coverage.difficulty,
+      estimated_cost: coverage.estimated_cost,
+      timeframe: coverage.timeframe,
+      adoption_percentage: Math.round(coverage.savingRate * 100),
+      assumptions: `Illustrative ${Math.round(coverage.savingRate * 100)}% reduction applied to the recorded ${coverage.category} baseline.`,
+      next_steps: [
+        `Review all recorded ${coverage.category} activities for the highest-impact opportunities.`,
+        'Set a measurable reduction target and review progress in Analytics & Reports.',
       ],
       status: 'new',
       created_at: new Date().toISOString(),

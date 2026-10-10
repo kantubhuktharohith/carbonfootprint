@@ -29,10 +29,9 @@
    - Filter by date range and category.
    - One-click CSV export with activity dates, units, factor values, emissions, and citations.
    - Printable institutional executive summary report (`window.print()`).
-6. **Zero-Friction Demo Mode**:
-   - Operates 100% offline out-of-the-box using reactive localStorage persistence.
-   - Preloaded with a realistic 350-attendee campus hackathon dataset ("GreenTech Conclave 2026").
-   - Instant 1-click evaluation access without required registration.
+6. **Offline-Ready Local Persistence**:
+   - Operates without Supabase using browser localStorage persistence.
+   - Starts with an empty workspace so all displayed records are user-created.
 
 ---
 
@@ -58,7 +57,7 @@ cd carbonfootprint
 npm install
 ```
 
-### 2. Run Locally in Demo Mode
+### 2. Run Locally
 ```bash
 npm run dev
 ```
@@ -79,7 +78,7 @@ npm run build
 
 ## 🗄️ Supabase PostgreSQL Setup (Optional Cloud Mode)
 
-To enable live Supabase persistence instead of local demo mode:
+To enable live Supabase persistence instead of browser local storage:
 
 1. Create a project at [Supabase](https://supabase.com).
 2. Execute [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor to initialize tables and Row Level Security (RLS) policies.

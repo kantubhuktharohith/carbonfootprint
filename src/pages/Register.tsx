@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Mail, Lock, User, Building2, CalendarDays, ArrowRight } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Leaf, Mail, Lock, User, Building2, CalendarDays } from 'lucide-react';
+import { supabase, isSupabaseConfigured, saveLocalProfile } from '../lib/supabase';
 import { WorkspaceType } from '../types';
 
 export const Register: React.FC = () => {
@@ -16,7 +16,14 @@ export const Register: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSupabaseConfigured) {
-      navigate('/');
+      await saveLocalProfile({
+        id: `local-${Date.now()}`,
+        email,
+        full_name: fullName,
+        account_type: accountType,
+        created_at: new Date().toISOString(),
+      });
+      navigate('/', { replace: true });
       return;
     }
 
@@ -34,7 +41,7 @@ export const Register: React.FC = () => {
         },
       });
       if (error) throw error;
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed.');
     } finally {

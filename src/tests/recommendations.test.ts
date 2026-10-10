@@ -3,7 +3,7 @@ import {
   generateRecommendations,
   generateInstantActivitySuggestion,
 } from '../lib/recommendations';
-import { DEMO_ACTIVITIES } from '../data/demoData';
+import { DEMO_ACTIVITIES } from './fixtures';
 
 describe('User-Input-Based Suggestions and Recommendations', () => {
   it('generates standard baseline recommendations when no preferences are specified', () => {

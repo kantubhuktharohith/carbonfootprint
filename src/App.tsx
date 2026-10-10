@@ -8,7 +8,7 @@ import { AddActivity } from './pages/AddActivity';
 import { Analytics } from './pages/Analytics';
 import { Recommendations } from './pages/Recommendations';
 import { Simulator } from './pages/Simulator';
-import { EmissionFactorsPage } from './pages/EmissionFactorsPage';
+
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -30,7 +30,6 @@ export function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="recommendations" element={<Recommendations />} />
             <Route path="simulator" element={<Simulator />} />
-            <Route path="factors" element={<EmissionFactorsPage />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

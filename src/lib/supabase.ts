@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ActivityRecord, EventWorkspace, Organization, Profile, SimulationScenario } from '../types';
-import { DEMO_ACTIVITIES, DEMO_EVENT, DEMO_ORGANIZATION, DEMO_USER_PROFILE } from '../data/demoData';
+import { SAMPLE_ACTIVITIES } from '../data/sampleData';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,30 +17,21 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   : null;
 
 // ============================================================================
-// LOCAL STORAGE PERSISTENCE LAYER (Used in Demo Mode or when offline)
+// LOCAL STORAGE PERSISTENCE LAYER (Used when Supabase is not configured)
 // ============================================================================
 const STORAGE_KEYS = {
-  ACTIVITIES: 'ecotrack_activities_v1',
-  PROFILE: 'ecotrack_profile_v1',
-  ORGANIZATION: 'ecotrack_org_v1',
-  EVENT: 'ecotrack_event_v1',
-  SIMULATIONS: 'ecotrack_simulations_v1',
-  WORKSPACE_TYPE: 'ecotrack_workspace_type_v1',
+  ACTIVITIES: 'ecotrack_activities_v2',
+  PROFILE: 'ecotrack_profile_v2',
+  ORGANIZATION: 'ecotrack_org_v2',
+  EVENT: 'ecotrack_event_v2',
+  SIMULATIONS: 'ecotrack_simulations_v2',
+  WORKSPACE_TYPE: 'ecotrack_workspace_type_v2',
 };
 
 // Initialize default storage if empty
 export function initLocalStorage(): void {
   if (!localStorage.getItem(STORAGE_KEYS.ACTIVITIES)) {
-    localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(DEMO_ACTIVITIES));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.PROFILE)) {
-    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(DEMO_USER_PROFILE));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.ORGANIZATION)) {
-    localStorage.setItem(STORAGE_KEYS.ORGANIZATION, JSON.stringify(DEMO_ORGANIZATION));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.EVENT)) {
-    localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(DEMO_EVENT));
+    localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.SIMULATIONS)) {
     localStorage.setItem(STORAGE_KEYS.SIMULATIONS, JSON.stringify([]));
@@ -62,11 +53,23 @@ export async function fetchActivities(): Promise<ActivityRecord[]> {
     } catch {
       // Fall through to local storage
     }
+
   }
 
   initLocalStorage();
   const raw = localStorage.getItem(STORAGE_KEYS.ACTIVITIES);
-  return raw ? JSON.parse(raw) : DEMO_ACTIVITIES;
+  return raw ? JSON.parse(raw) : [];
+}
+
+export function loadSampleActivities(): ActivityRecord[] {
+  initLocalStorage();
+  const raw = localStorage.getItem(STORAGE_KEYS.ACTIVITIES);
+  const existing: ActivityRecord[] = raw ? JSON.parse(raw) : [];
+  const existingIds = new Set(existing.map((activity) => activity.id));
+  const additions = SAMPLE_ACTIVITIES.filter((activity) => !existingIds.has(activity.id));
+  const updated = [...additions, ...existing];
+  localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(updated));
+  return updated;
 }
 
 export async function saveActivity(activity: ActivityRecord): Promise<ActivityRecord> {
@@ -116,29 +119,63 @@ export async function removeActivity(id: string): Promise<boolean> {
   return true;
 }
 
-export async function fetchProfile(): Promise<Profile> {
+export async function fetchProfile(): Promise<Profile | null> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userData.user.id)
+          .maybeSingle();
+        if (!error && data) return data as Profile;
+      }
+    } catch {
+      // Fall through to local storage when authentication or the database is unavailable.
+    }
+  }
+
   initLocalStorage();
   const raw = localStorage.getItem(STORAGE_KEYS.PROFILE);
-  return raw ? JSON.parse(raw) : DEMO_USER_PROFILE;
+  return raw ? JSON.parse(raw) : null;
 }
 
 export async function updateProfile(profile: Partial<Profile>): Promise<Profile> {
   const current = await fetchProfile();
+  if (!current) {
+    throw new Error('No profile is available. Create an account before updating your profile.');
+  }
   const updated: Profile = { ...current, ...profile };
+
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(profile)
+      .eq('id', current.id)
+      .select()
+      .single();
+    if (!error && data) return data as Profile;
+    if (error) throw error;
+  }
+
   localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(updated));
   return updated;
 }
 
-export async function fetchOrganization(): Promise<Organization> {
-  initLocalStorage();
-  const raw = localStorage.getItem(STORAGE_KEYS.ORGANIZATION);
-  return raw ? JSON.parse(raw) : DEMO_ORGANIZATION;
+export async function saveLocalProfile(profile: Profile): Promise<Profile> {
+  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+  return profile;
 }
 
-export async function fetchEventWorkspace(): Promise<EventWorkspace> {
-  initLocalStorage();
+export async function fetchOrganization(): Promise<Organization | null> {
+  const raw = localStorage.getItem(STORAGE_KEYS.ORGANIZATION);
+  return raw ? JSON.parse(raw) : null;
+}
+
+export async function fetchEventWorkspace(): Promise<EventWorkspace | null> {
   const raw = localStorage.getItem(STORAGE_KEYS.EVENT);
-  return raw ? JSON.parse(raw) : DEMO_EVENT;
+  return raw ? JSON.parse(raw) : null;
 }
 
 export async function fetchSimulations(): Promise<SimulationScenario[]> {
@@ -152,12 +189,4 @@ export async function saveSimulationScenario(scenario: SimulationScenario): Prom
   const existing = await fetchSimulations();
   const updated = [scenario, ...existing];
   localStorage.setItem(STORAGE_KEYS.SIMULATIONS, JSON.stringify(updated));
-}
-
-export function resetDemoData(): void {
-  localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(DEMO_ACTIVITIES));
-  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(DEMO_USER_PROFILE));
-  localStorage.setItem(STORAGE_KEYS.ORGANIZATION, JSON.stringify(DEMO_ORGANIZATION));
-  localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(DEMO_EVENT));
-  localStorage.setItem(STORAGE_KEYS.SIMULATIONS, JSON.stringify([]));
 }

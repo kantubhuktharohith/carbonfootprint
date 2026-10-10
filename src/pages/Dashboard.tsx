@@ -27,10 +27,10 @@ export const Dashboard: React.FC = () => {
 
   const workspaceName =
     workspaceType === 'event'
-      ? event?.name || 'EcoHack & Sustainability Conclave 2026'
+      ? event?.name || 'Event Workspace'
       : workspaceType === 'institution'
-      ? organization?.name || 'Apex Institute of Technology & Green Innovation'
-      : profile?.full_name || 'Dr. Aarav Sharma';
+      ? organization?.name || 'Institution Workspace'
+      : profile?.full_name || 'Individual Workspace';
 
   const topRec = recommendations.length > 0 ? recommendations[0] : undefined;
 
@@ -54,14 +54,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 1. Header Banner & Workspace Context */}
-      <DashboardHeader
-        workspaceType={workspaceType}
-        workspaceName={workspaceName}
-        highestCategory={highestCategory}
-        perPersonEmissionsKg={perPersonEmissionsKg}
-        totalEmissionsKg={totalEmissionsKg}
-        topRecommendation={topRec}
-      />
+      
 
       {/* 2. Top Summary Metrics Cards */}
       <SummaryCards

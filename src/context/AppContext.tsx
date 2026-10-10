@@ -16,7 +16,8 @@ import {
   fetchProfile,
   fetchOrganization,
   fetchEventWorkspace,
-  resetDemoData as resetDemoStorage,
+  updateProfile,
+  loadSampleActivities,
 } from '../lib/supabase';
 import {
   calculateCategoryTotals,
@@ -27,7 +28,6 @@ import {
   filterActivitiesByPeriod,
   getHighestEmissionCategory,
 } from '../lib/calculations';
-import { DEMO_PREVIOUS_ACTIVITIES } from '../data/demoData';
 import { generateRecommendations } from '../lib/recommendations';
 
 interface AppContextType {
@@ -39,6 +39,7 @@ interface AppContextType {
   reportingPeriod: ReportingPeriod;
   setReportingPeriod: (period: ReportingPeriod) => void;
   profile: Profile | null;
+  updateProfile: (profile: Partial<Profile>) => Promise<Profile>;
   organization: Organization | null;
   event: EventWorkspace | null;
   setParticipantCount: (count: number) => void;
@@ -46,7 +47,7 @@ interface AppContextType {
   addActivity: (act: Omit<ActivityRecord, 'id' | 'created_at'>) => Promise<ActivityRecord>;
   editActivity: (act: ActivityRecord) => Promise<ActivityRecord>;
   deleteActivity: (id: string) => Promise<boolean>;
-  resetToDemoData: () => void;
+  loadSampleData: () => void;
   // Computed values
   totalEmissionsKg: number;
   categorySummaries: CategorySummary[];
@@ -107,8 +108,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const highestCategory = useMemo(() => getHighestEmissionCategory(categorySummaries), [categorySummaries]);
 
   const participantCount = useMemo(() => {
-    if (workspaceType === 'event') return event?.actual_participants || 342;
-    if (workspaceType === 'institution') return organization?.participant_count || 1200;
+    if (workspaceType === 'event') return event?.actual_participants || 1;
+    if (workspaceType === 'institution') return organization?.participant_count || 1;
     return 1; // individual
   }, [workspaceType, event, organization]);
 
@@ -118,7 +119,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   );
 
   const periodComparison = useMemo(
-    () => compareReportingPeriods(activities, DEMO_PREVIOUS_ACTIVITIES),
+    () => compareReportingPeriods(activities, []),
     [activities]
   );
 
@@ -159,9 +160,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return success;
   };
 
-  const handleResetToDemoData = () => {
-    resetDemoStorage();
-    loadData();
+  const handleLoadSampleData = () => {
+    const updated = loadSampleActivities();
+    setAllActivities(updated);
   };
 
   const handleSetParticipantCount = (count: number) => {
@@ -170,6 +171,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } else if (workspaceType === 'institution' && organization) {
       setOrganization({ ...organization, participant_count: count });
     }
+  };
+
+  const handleUpdateProfile = async (profileData: Partial<Profile>): Promise<Profile> => {
+    const updated = await updateProfile(profileData);
+    setProfile(updated);
+    return updated;
   };
 
   return (
@@ -183,13 +190,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         reportingPeriod,
         setReportingPeriod,
         profile,
+        updateProfile: handleUpdateProfile,
         organization,
         event,
         setParticipantCount: handleSetParticipantCount,
         addActivity: handleAddActivity,
         editActivity: handleEditActivity,
         deleteActivity: handleDeleteActivity,
-        resetToDemoData: handleResetToDemoData,
+        loadSampleData: handleLoadSampleData,
         totalEmissionsKg,
         categorySummaries,
         perPersonEmissionsKg,

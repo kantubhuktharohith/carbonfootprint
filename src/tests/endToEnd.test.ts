@@ -6,7 +6,7 @@ import {
   calculatePerPersonEmissions,
   compareReportingPeriods,
 } from '../lib/calculations';
-import { DEMO_ACTIVITIES, DEMO_PREVIOUS_ACTIVITIES } from '../data/demoData';
+import { DEMO_ACTIVITIES, DEMO_PREVIOUS_ACTIVITIES } from './fixtures';
 import { generateRecommendations } from '../lib/recommendations';
 import {
   calculateSimulation,

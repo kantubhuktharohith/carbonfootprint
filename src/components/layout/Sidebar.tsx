@@ -68,12 +68,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: 'Interactive',
     },
     {
-      to: '/factors',
-      label: 'Emission Factors',
-      icon: BookOpenCheck,
-      badge: null,
-    },
-    {
       to: '/settings',
       label: 'Settings & Audit',
       icon: Settings,

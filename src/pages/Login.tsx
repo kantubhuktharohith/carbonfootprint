@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Sparkles, ArrowRight, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { Leaf, Mail, Lock } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const Login: React.FC = () => {
@@ -13,7 +13,7 @@ export const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSupabaseConfigured) {
-      // In demo mode, bypass directly to workspace
+      // Local workspaces do not require remote authentication.
       navigate('/');
       return;
     }
@@ -32,10 +32,6 @@ export const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEnterDemo = () => {
-    navigate('/');
   };
 
   return (
@@ -58,31 +54,12 @@ export const Login: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        {/* Instant Demo Pass Button */}
-        <div className="mb-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 p-5 rounded-3xl border border-emerald-200 shadow-xs text-center space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-[#166534] text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Hackathon Evaluation Access</span>
-          </div>
-          <p className="text-xs text-emerald-950 font-medium">
-            Explore the complete interactive campus hackathon workspace with preloaded baseline data and zero sign-up required.
-          </p>
-          <button
-            type="button"
-            onClick={handleEnterDemo}
-            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#166534] hover:bg-[#14532d] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-95"
-          >
-            <span>Explore Demo Workspace Directly</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
         {/* Regular Sign In Form */}
         <div className="bg-white py-8 px-6 sm:px-8 rounded-3xl border border-gray-200/80 shadow-xs space-y-6">
           <div className="relative flex items-center justify-center">
             <div className="border-t border-gray-200 w-full" />
             <span className="bg-white px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider absolute">
-              Or Sign In with Supabase
+              Sign In
             </span>
           </div>
 
