@@ -133,18 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Environmental Audit Footnote Card (when expanded) */}
-        {!collapsed && (
-          <div className="p-4 m-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
-            <div className="flex items-center gap-2 mb-1.5 text-xs font-semibold text-emerald-900">
-              <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-              <span>GHG Protocol Screening</span>
-            </div>
-            <p className="text-[11px] text-emerald-700 leading-relaxed">
-              CEA v19 & DEFRA 2024 calculation factors. Verified formulas with zero duplicate counting.
-            </p>
-          </div>
-        )}
+        
 
         {/* Desktop Collapse Toggle */}
         <div className="hidden lg:flex p-3 border-t border-gray-100 justify-end">
